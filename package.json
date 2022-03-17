@@ -1,5 +1,5 @@
 {
-  "name": "spa",
+  "name": "sightsea.dev",
   "version": "0.0.1",
   "scripts": {
     "build": "npm run compile-css; npm run bundle",

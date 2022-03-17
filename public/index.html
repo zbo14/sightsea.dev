@@ -3,15 +3,70 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>spa</title>
+    <title>sightsea</title>
     <link rel="icon" href="images/favicon.ico" type="image/x-icon" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Yatra+One&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne+Mono&display=swap">
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
-    <div id="root" class="container"></div>
+    <div id="container">
+      <div id="control-panel">
+        <div class="cp-group">
+          <button id="play-btn">&#9656;</button>
+          <button id="stop-btn">&#9632;</button>
+          <button id="reset-btn">&#8634;</button>
+          <button id="fns-btn">f(x)</button>
+        </div>
+        <div class="cp-group">
+          <label for="speed-select">speed:</label>
+          <select id="speed-select">
+            <option value="slow">slow</option>
+            <option value="medium" selected>medium</option>
+            <option value="fast">fast</option>
+          </select>
+        </div>
+        <div class="cp-group">
+          <label for="step-input">step:</label>
+          <input type="number" id="step-input" min="-256" max="256" step="1" value="1">
+        </div>
+        <div class="cp-group">
+          <span id="rvalue">r: 000</span>
+          <span id="gvalue">g: 000</span>
+          <span id="bvalue">b: 000</span>
+          <div id="palette"></div>
+        </div>
+      </div>
+      <canvas id="canvas"></canvas>
+      <div class="modal" id="fns-modal">
+        <button class="close-btn">x</button>
+        <div class="modal-content">
+          <label for="rstartfn">red start</label>
+          <input type="text" id="rstartfn">
+        </div>
+        <div class="modal-content">
+          <label for="gstartfn">green start</label>
+          <input type="text" id="gstartfn">
+        </div>
+        <div class="modal-content">
+          <label for="bstartfn">blue start</label>
+          <input type="text" id="bstartfn">
+        </div>
+        <div class="modal-content">
+          <label for="rchangefn">red change</label>
+          <input type="text" id="rchangefn">
+        </div>
+        <div class="modal-content">
+          <label for="gchangefn">green change</label>
+          <input type="text" id="gchangefn">
+        </div>
+        <div class="modal-content">
+          <label for="bchangefn">blue change</label>
+          <input type="text" id="bchangefn">
+        </div>
+      </div>
+    </div>
     <script type="text/javascript" src="bundle.js"></script>
   </body>
 </html>
