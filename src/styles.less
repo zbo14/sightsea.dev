@@ -38,6 +38,40 @@ body {
   }
 }
 
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip .tooltip-text {
+  visibility: hidden;
+  width: fit-content;
+  background-color: black;
+  color: white;
+  text-align: center;
+  padding: 4px;
+  border-radius: 4px;
+  position: absolute;
+  z-index: 10;
+  top: 100%;
+  left: 0%;
+  white-space: nowrap;
+  max-width: none;
+}
+
+.tooltip:hover .tooltip-text {
+  visibility: visible;
+}
+
+.legend {
+  margin: 1vh 2vw;
+
+  & > * {
+    display: block;
+    margin-bottom: 1vh;
+  }
+}
+
 #container {
   left: 0;
   position: absolute;

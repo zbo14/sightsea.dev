@@ -17,7 +17,14 @@
           <button id="play-btn">&#9656;</button>
           <button id="stop-btn">&#9632;</button>
           <button id="reset-btn">&#8634;</button>
-          <button id="fns-btn">f(x)</button>
+          <button class="tooltip" id="start-fns-btn">
+            f(x, y)
+            <span class="tooltip-text">Start functions</span>
+          </button>
+          <button class="tooltip" id="change-fns-btn">
+            f(x, y, v, s)
+            <span class="tooltip-text">Change functions</span>
+          </button>
         </div>
         <div class="cp-group">
           <label for="speed-select">speed:</label>
@@ -39,8 +46,13 @@
         </div>
       </div>
       <canvas id="canvas"></canvas>
-      <div class="modal" id="fns-modal">
+      <div class="modal" id="start-fns-modal">
         <button class="close-btn">x</button>
+        <div class="legend">
+          <span>Variables:</span>
+          <span><b>x:</b> x coordinate of pixel</span>
+          <span><b>y:</b> y coordinate of pixel</span>
+        </div>
         <div class="modal-content">
           <label for="rstartfn">red start</label>
           <input type="text" id="rstartfn">
@@ -52,6 +64,16 @@
         <div class="modal-content">
           <label for="bstartfn">blue start</label>
           <input type="text" id="bstartfn">
+        </div>
+      </div>
+      <div class="modal" id="change-fns-modal">
+        <button class="close-btn">x</button>
+        <div class="legend">
+          <span>Variables:</span>
+          <span><b>x:</b> x coordinate of pixel</span>
+          <span><b>y:</b> y coordinate of pixel</span>
+          <span><b>v:</b> r, g, or b value of pixel [0-255]</span>
+          <span><b>s:</b> step value</span>
         </div>
         <div class="modal-content">
           <label for="rchangefn">red change</label>

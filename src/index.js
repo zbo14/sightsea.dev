@@ -46,8 +46,8 @@ const rChangeFnInput = document.getElementById('rchangefn')
 const gChangeFnInput = document.getElementById('gchangefn')
 const bChangeFnInput = document.getElementById('bchangefn')
 
-const defaultStartFn = i => i
-const defaultChangeFn = (x, s) => x + s
+const defaultStartFn = (x, y) => x + y
+const defaultChangeFn = (x, y, v, s) => x + y + v + s
 
 let rStartFn = defaultStartFn
 let gStartFn = defaultStartFn
@@ -60,35 +60,54 @@ let bChangeFn = defaultChangeFn
 let x = 0
 let y = 0
 
+const makeFnSubs = rhs => {
+  return rhs
+    .replace(/([0-9.]+)\s*([a-z]+)/gi, '$1*$2')
+    .replace(/(\))\s*(\()/gi, '$1*$2')
+    .replace(/\^/g, '**')
+}
+
 const createStartFn = rhs => {
-  if (/[^0-9i*+\-/. ]/.test(rhs)) {
-    const err = new Error('Invalid start function: i => ' + rhs)
+  rhs = makeFnSubs(rhs)
+
+  if (/[^0-9xy*+\-/.() ]/.test(rhs)) {
+    const err = new Error('Invalid start function: (x, y) => ' + rhs)
     console.error(err)
     window.alert(err.message)
     return
   }
 
   // eslint-disable-next-line no-new-func
-  return new Function('i', 'return ' + rhs)
+  return new Function('x', 'y', 'return ' + rhs)
 }
 
 const createChangeFn = rhs => {
-  if (/[^0-9isx*+\-/. ]/.test(rhs)) {
-    const err = new Error('Invalid change function: (x, s, i) => ' + rhs)
+  rhs = makeFnSubs(rhs)
+
+  if (/[^0-9xyvs*+\-/.() ]/.test(rhs)) {
+    const err = new Error('Invalid change function: (x, y, v, s) => ' + rhs)
     console.error(err)
     window.alert(err.message)
     return
   }
 
   // eslint-disable-next-line no-new-func
-  return new Function('x', 's', 'i', 'return ' + rhs)
+  return new Function('x', 'y', 'v', 's', 'return ' + rhs)
 }
 
 const init = () => {
+  let x = 0
+  let y = 0
+
   for (let i = 0; i < imageData.data.length; i += 4) {
-    imageData.data[i] = mod(rStartFn, i)
-    imageData.data[i + 1] = mod(gStartFn, i + 1)
-    imageData.data[i + 2] = mod(bStartFn, i + 2)
+    if (++x === canvas.width) {
+      x = 0
+      ++y
+    }
+
+    imageData.data[i] = mod(rStartFn, x, y)
+    imageData.data[i + 1] = mod(gStartFn, x, y)
+    imageData.data[i + 2] = mod(bStartFn, x, y)
     imageData.data[i + 3] = 255
   }
 
@@ -183,10 +202,18 @@ controlPanel.onclick = () => {
 }
 
 const change = s => {
+  let x = 0
+  let y = 0
+
   for (let i = 0; i < imageData.data.length; i += 4) {
-    imageData.data[i] = mod(rChangeFn, imageData.data[i], s, i)
-    imageData.data[i + 1] = mod(gChangeFn, imageData.data[i + 1], s, i + 1)
-    imageData.data[i + 2] = mod(bChangeFn, imageData.data[i + 2], s, i + 2)
+    if (++x === canvas.width) {
+      x = 0
+      ++y
+    }
+
+    imageData.data[i] = mod(rChangeFn, x, y, imageData.data[i], s)
+    imageData.data[i + 1] = mod(gChangeFn, x, y, imageData.data[i + 1], s)
+    imageData.data[i + 2] = mod(bChangeFn, x, y, imageData.data[i + 2], s)
   }
 
   ctx.putImageData(imageData, 0, 0)
@@ -204,14 +231,18 @@ const stopBtn = document.getElementById('stop-btn')
 const resetBtn = document.getElementById('reset-btn')
 const speedSelect = document.getElementById('speed-select')
 const stepInput = document.getElementById('step-input')
-const fnsBtn = document.getElementById('fns-btn')
+const startFnsBtn = document.getElementById('start-fns-btn')
+const changeFnsBtn = document.getElementById('change-fns-btn')
 
-const fnsModal = document.getElementById('fns-modal')
-const closeFnsModalBtn = fnsModal.querySelector('.close-btn')
+const startFnsModal = document.getElementById('start-fns-modal')
+const changeFnsModal = document.getElementById('change-fns-modal')
+const closeStartFnsModalBtn = startFnsModal.querySelector('.close-btn')
+const closeChangeFnsModalBtn = changeFnsModal.querySelector('.close-btn')
 
 let interval
 let ms = 200
 let playing = false
+let showingModal = false
 let step = 1
 
 speedSelect.onchange = event => {
@@ -235,12 +266,23 @@ stepInput.oninput = event => {
   step = +event.target.value
 }
 
-fnsBtn.onclick = event => {
+startFnsBtn.onclick = event => {
+  if (showingModal) return
+
+  showingModal = true
   event.stopPropagation()
-  fnsModal.style.display = 'block'
+  startFnsModal.style.display = 'block'
 }
 
-closeFnsModalBtn.onclick = () => {
+changeFnsBtn.onclick = event => {
+  if (showingModal) return
+
+  showingModal = true
+  event.stopPropagation()
+  changeFnsModal.style.display = 'block'
+}
+
+closeStartFnsModalBtn.onclick = () => {
   rStartFn = rStartFnInput.value
     ? createStartFn(rStartFnInput.value)
     : defaultStartFn
@@ -253,6 +295,11 @@ closeFnsModalBtn.onclick = () => {
     ? createStartFn(bStartFnInput.value)
     : defaultStartFn
 
+  startFnsModal.style.display = 'none'
+  showingModal = false
+}
+
+closeChangeFnsModalBtn.onclick = () => {
   rChangeFn = rChangeFnInput.value
     ? createChangeFn(rChangeFnInput.value)
     : defaultChangeFn
@@ -265,7 +312,8 @@ closeFnsModalBtn.onclick = () => {
     ? createChangeFn(bChangeFnInput.value)
     : defaultChangeFn
 
-  fnsModal.style.display = 'none'
+  changeFnsModal.style.display = 'none'
+  showingModal = false
 }
 
 const play = () => {
