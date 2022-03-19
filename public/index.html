@@ -14,25 +14,17 @@
     <div id="container">
       <div id="control-panel">
         <div class="cp-group">
-          <button id="play-btn">&#9656;</button>
-          <button id="stop-btn">&#9632;</button>
+          <button id="play-btn">&#x25B6;</button>
           <button id="reset-btn">&#8634;</button>
+          <button id="record-btn">&#x23FA;</button>
           <button class="tooltip" id="start-fns-btn">
             f(x, y)
             <span class="tooltip-text">Start functions</span>
           </button>
           <button class="tooltip" id="change-fns-btn">
-            f(x, y, v, s)
+            f(r, g, b, s, x, y)
             <span class="tooltip-text">Change functions</span>
           </button>
-        </div>
-        <div class="cp-group">
-          <label for="speed-select">speed:</label>
-          <select id="speed-select">
-            <option value="slow">slow</option>
-            <option value="medium" selected>medium</option>
-            <option value="fast">fast</option>
-          </select>
         </div>
         <div class="cp-group">
           <label for="step-input">step:</label>
@@ -55,37 +47,39 @@
         </div>
         <div class="modal-content">
           <label for="rstartfn">red start</label>
-          <input type="text" id="rstartfn">
+          <input type="text" id="rstartfn" placeholder="x + y">
         </div>
         <div class="modal-content">
           <label for="gstartfn">green start</label>
-          <input type="text" id="gstartfn">
+          <input type="text" id="gstartfn" placeholder="x + y">
         </div>
         <div class="modal-content">
           <label for="bstartfn">blue start</label>
-          <input type="text" id="bstartfn">
+          <input type="text" id="bstartfn" placeholder="x + y">
         </div>
       </div>
       <div class="modal" id="change-fns-modal">
         <button class="close-btn">x</button>
         <div class="legend">
           <span>Variables:</span>
+          <span><b>r:</b> current r value of pixel [0-255]</span>
+          <span><b>g:</b> current g value of pixel [0-255]</span>
+          <span><b>b:</b> current b value of pixel [0-255]</span>
+          <span><b>s:</b> step value</span>
           <span><b>x:</b> x coordinate of pixel</span>
           <span><b>y:</b> y coordinate of pixel</span>
-          <span><b>v:</b> r, g, or b value of pixel [0-255]</span>
-          <span><b>s:</b> step value</span>
         </div>
         <div class="modal-content">
           <label for="rchangefn">red change</label>
-          <input type="text" id="rchangefn">
+          <input type="text" id="rchangefn" placeholder="r + s">
         </div>
         <div class="modal-content">
           <label for="gchangefn">green change</label>
-          <input type="text" id="gchangefn">
+          <input type="text" id="gchangefn" placeholder="g + s">
         </div>
         <div class="modal-content">
           <label for="bchangefn">blue change</label>
-          <input type="text" id="bchangefn">
+          <input type="text" id="bchangefn" placeholder="b + s">
         </div>
       </div>
     </div>

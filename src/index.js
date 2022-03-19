@@ -47,15 +47,18 @@ const gChangeFnInput = document.getElementById('gchangefn')
 const bChangeFnInput = document.getElementById('bchangefn')
 
 const defaultStartFn = (x, y) => x + y
-const defaultChangeFn = (x, y, v, s) => x + y + v + s
 
 let rStartFn = defaultStartFn
 let gStartFn = defaultStartFn
 let bStartFn = defaultStartFn
 
-let rChangeFn = defaultChangeFn
-let gChangeFn = defaultChangeFn
-let bChangeFn = defaultChangeFn
+const defaultRChangeFn = (r, g, b, s, x, y) => r + s
+const defaultGChangeFn = (r, g, b, s, x, y) => g + s
+const defaultBChangeFn = (r, g, b, s, x, y) => b + s
+
+let rChangeFn = defaultRChangeFn
+let gChangeFn = defaultGChangeFn
+let bChangeFn = defaultBChangeFn
 
 let x = 0
 let y = 0
@@ -84,15 +87,15 @@ const createStartFn = rhs => {
 const createChangeFn = rhs => {
   rhs = makeFnSubs(rhs)
 
-  if (/[^0-9xyvs*+\-/.() ]/.test(rhs)) {
-    const err = new Error('Invalid change function: (x, y, v, s) => ' + rhs)
+  if (/[^0-9rgbsxy*+\-/.() ]/.test(rhs)) {
+    const err = new Error('Invalid change function: (r, g, b, s, x, y) => ' + rhs)
     console.error(err)
     window.alert(err.message)
     return
   }
 
   // eslint-disable-next-line no-new-func
-  return new Function('x', 'y', 'v', 's', 'return ' + rhs)
+  return new Function('r', 'g', 'b', 's', 'x', 'y', 'return ' + rhs)
 }
 
 const init = () => {
@@ -115,6 +118,8 @@ const init = () => {
 }
 
 const drawCircle = () => {
+  if (!x && !y) return
+
   ctx.beginPath()
   ctx.ellipse(x, y, 3, 3, 0, 0, 2 * Math.PI)
   ctx.closePath()
@@ -128,6 +133,8 @@ const bvalue = document.getElementById('bvalue')
 const palette = document.getElementById('palette')
 
 const updateRGB = () => {
+  if (!x && !y) return
+
   const index = x * 4 + y * imageData.width * 4
   let [r, g, b] = imageData.data.slice(index)
 
@@ -201,35 +208,9 @@ controlPanel.onclick = () => {
   palette.style.backgroundColor = 'white'
 }
 
-const change = s => {
-  let x = 0
-  let y = 0
-
-  for (let i = 0; i < imageData.data.length; i += 4) {
-    if (++x === canvas.width) {
-      x = 0
-      ++y
-    }
-
-    imageData.data[i] = mod(rChangeFn, x, y, imageData.data[i], s)
-    imageData.data[i + 1] = mod(gChangeFn, x, y, imageData.data[i + 1], s)
-    imageData.data[i + 2] = mod(bChangeFn, x, y, imageData.data[i + 2], s)
-  }
-
-  ctx.putImageData(imageData, 0, 0)
-
-  if (!x && !y) return
-
-  drawCircle()
-  updateRGB()
-}
-
-init()
-
 const playBtn = document.getElementById('play-btn')
-const stopBtn = document.getElementById('stop-btn')
 const resetBtn = document.getElementById('reset-btn')
-const speedSelect = document.getElementById('speed-select')
+const recordBtn = document.getElementById('record-btn')
 const stepInput = document.getElementById('step-input')
 const startFnsBtn = document.getElementById('start-fns-btn')
 const changeFnsBtn = document.getElementById('change-fns-btn')
@@ -239,28 +220,43 @@ const changeFnsModal = document.getElementById('change-fns-modal')
 const closeStartFnsModalBtn = startFnsModal.querySelector('.close-btn')
 const closeChangeFnsModalBtn = changeFnsModal.querySelector('.close-btn')
 
-let interval
-let ms = 200
 let playing = false
+let recording = false
 let showingModal = false
 let step = 1
 
-speedSelect.onchange = event => {
-  switch (event.target.value) {
-    case 'slow':
-      ms = 500
-      break
+const change = () => {
+  if (!playing) return
 
-    case 'medium':
-      ms = 200
-      break
+  let r, g, b
 
-    case 'fast':
-      ms = 100
+  let x = 0
+  let y = 0
+
+  for (let i = 0; i < imageData.data.length; i += 4) {
+    if (++x === canvas.width) {
+      x = 0
+      ++y
+    }
+
+    r = imageData.data[i]
+    g = imageData.data[i + 1]
+    b = imageData.data[i + 2]
+
+    imageData.data[i] = mod(rChangeFn, r, g, b, step, x, y)
+    imageData.data[i + 1] = mod(gChangeFn, r, g, b, step, x, y)
+    imageData.data[i + 2] = mod(bChangeFn, r, g, b, step, x, y)
   }
 
-  playing && play()
+  ctx.putImageData(imageData, 0, 0)
+
+  drawCircle()
+  updateRGB()
+
+  window.requestAnimationFrame(change)
 }
+
+init()
 
 stepInput.oninput = event => {
   step = +event.target.value
@@ -302,46 +298,87 @@ closeStartFnsModalBtn.onclick = () => {
 closeChangeFnsModalBtn.onclick = () => {
   rChangeFn = rChangeFnInput.value
     ? createChangeFn(rChangeFnInput.value)
-    : defaultChangeFn
+    : defaultRChangeFn
 
   gChangeFn = gChangeFnInput.value
     ? createChangeFn(gChangeFnInput.value)
-    : defaultChangeFn
+    : defaultGChangeFn
 
   bChangeFn = bChangeFnInput.value
     ? createChangeFn(bChangeFnInput.value)
-    : defaultChangeFn
+    : defaultBChangeFn
 
   changeFnsModal.style.display = 'none'
   showingModal = false
 }
 
 const play = () => {
-  clearInterval(interval)
-
-  interval = setInterval(() => {
-    change(step)
-  }, ms)
-
   playing = true
+
+  window.requestAnimationFrame(change)
 }
 
 const stop = () => {
-  clearInterval(interval)
   playing = false
 }
 
 playBtn.onclick = event => {
   event.stopPropagation()
-  play()
-}
 
-stopBtn.onclick = event => {
-  event.stopPropagation()
-  stop()
+  if (playing) {
+    stop()
+    playBtn.innerHTML = '&#x25B6;'
+  } else {
+    play()
+    playBtn.innerHTML = '&#x25A0;'
+  }
 }
 
 resetBtn.onclick = event => {
   event.stopPropagation()
   init()
+}
+
+let recordedChunks = []
+let recorder = null
+
+recordBtn.onclick = event => {
+  if (recording) {
+    const blob = new window.Blob(recordedChunks, { type: 'video/webm' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    const name = window.prompt('Name your download:') || 'seasight'
+
+    a.href = url
+    a.download = name + '.webm'
+    a.click()
+
+    URL.revokeObjectURL(url)
+
+    recorder.stop()
+
+    recordBtn.style.color = 'black'
+    recordedChunks = []
+    recording = false
+
+    return
+  }
+
+  recordedChunks = []
+  recording = true
+
+  const stream = canvas.captureStream(60)
+
+  recorder = new window.MediaRecorder(stream, {
+    mimeType: 'video/webm;codecs=vp9'
+  })
+
+  recorder.ondataavailable = event => {
+    recordedChunks.push(event.data)
+  }
+
+  recorder.start(1e3)
+
+  recordBtn.style.color = 'red'
+  playing || play()
 }
