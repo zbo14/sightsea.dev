@@ -82,6 +82,28 @@
           <input type="text" id="bchangefn" placeholder="b + s">
         </div>
       </div>
+      <div class="modal" id="download-modal">
+        <div class="modal-content">
+          <label for="filename-input">Filename</label>
+          <input type="text" id="filename-input">
+        </div>
+        <div class="modal-content">
+          <select id="select-filetype">
+            <option disabled selected>Select video type:</option>
+            <option value="mp4">mp4</option>
+            <option value="webm">webm</option>
+          </select>
+        </div>
+        <div class="modal-content">
+          <button id="download-btn">download</button>
+        </div>
+      </div>
+      <div class="modal" id="warning-modal">
+        <button class="close-btn">x</button>
+        <div class="modal-content">
+          <p><b>WARNING:</b> This site generates visualizations that may trigger seizures for people with photosensitive epilepsy. User discretion is advised.</p>
+        </div>
+      </div>
     </div>
     <script type="text/javascript" src="bundle.js"></script>
   </body>

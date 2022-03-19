@@ -258,24 +258,30 @@ const change = () => {
 
 init()
 
+const showModal = modal => {
+  if (showingModal) return
+
+  showingModal = true
+  modal.style.display = 'block'
+}
+
+const hideModal = modal => {
+  modal.style.display = 'none'
+  showingModal = false
+}
+
 stepInput.oninput = event => {
   step = +event.target.value
 }
 
 startFnsBtn.onclick = event => {
-  if (showingModal) return
-
-  showingModal = true
   event.stopPropagation()
-  startFnsModal.style.display = 'block'
+  showModal(startFnsModal)
 }
 
 changeFnsBtn.onclick = event => {
-  if (showingModal) return
-
-  showingModal = true
   event.stopPropagation()
-  changeFnsModal.style.display = 'block'
+  showModal(changeFnsModal)
 }
 
 closeStartFnsModalBtn.onclick = () => {
@@ -291,8 +297,7 @@ closeStartFnsModalBtn.onclick = () => {
     ? createStartFn(bStartFnInput.value)
     : defaultStartFn
 
-  startFnsModal.style.display = 'none'
-  showingModal = false
+  hideModal(startFnsModal)
 }
 
 closeChangeFnsModalBtn.onclick = () => {
@@ -308,8 +313,7 @@ closeChangeFnsModalBtn.onclick = () => {
     ? createChangeFn(bChangeFnInput.value)
     : defaultBChangeFn
 
-  changeFnsModal.style.display = 'none'
-  showingModal = false
+  hideModal(changeFnsModal)
 }
 
 const play = () => {
@@ -342,24 +346,49 @@ resetBtn.onclick = event => {
 let recordedChunks = []
 let recorder = null
 
-recordBtn.onclick = event => {
+const codecs = {
+  mp4: 'codecs=h264',
+  webm: 'codecs=vp9'
+}
+
+const downloadModal = document.getElementById('download-modal')
+const downloadBtn = document.getElementById('download-btn')
+const filenameInput = document.getElementById('filename-input')
+const selectFiletype = document.getElementById('select-filetype')
+
+let filename
+let filetype
+
+recordBtn.onclick = async event => {
   if (recording) {
-    const blob = new window.Blob(recordedChunks, { type: 'video/webm' })
+    recorder.stop()
+    recordBtn.style.color = 'black'
+
+    showModal(downloadModal)
+
+    await new Promise(resolve => {
+      downloadBtn.onclick = resolve
+    })
+
+    hideModal(downloadModal)
+
+    filename = filenameInput.value
+    filetype = selectFiletype.value
+
+    const blob = new window.Blob(recordedChunks, { type: 'video/' + filetype })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
-    const name = window.prompt('Name your download:') || 'seasight'
 
     a.href = url
-    a.download = name + '.webm'
+    a.download = filename + '.' + filetype
     a.click()
 
     URL.revokeObjectURL(url)
 
-    recorder.stop()
-
-    recordBtn.style.color = 'black'
     recordedChunks = []
     recording = false
+
+    stop()
 
     return
   }
@@ -367,11 +396,10 @@ recordBtn.onclick = event => {
   recordedChunks = []
   recording = true
 
-  const stream = canvas.captureStream(60)
+  const stream = canvas.captureStream(240)
+  const mimeType = 'video/' + filetype + ';' + codecs[filetype]
 
-  recorder = new window.MediaRecorder(stream, {
-    mimeType: 'video/webm;codecs=vp9'
-  })
+  recorder = new window.MediaRecorder(stream, { mimeType })
 
   recorder.ondataavailable = event => {
     recordedChunks.push(event.data)
@@ -381,4 +409,13 @@ recordBtn.onclick = event => {
 
   recordBtn.style.color = 'red'
   playing || play()
+}
+
+const warningModal = document.getElementById('warning-modal')
+const closeWarningModalBtn = warningModal.querySelector('.close-btn')
+
+showModal(warningModal)
+
+closeWarningModalBtn.onclick = () => {
+  hideModal(warningModal)
 }
