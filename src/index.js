@@ -221,7 +221,6 @@ const closeStartFnsModalBtn = startFnsModal.querySelector('.close-btn')
 const closeChangeFnsModalBtn = changeFnsModal.querySelector('.close-btn')
 
 let playing = false
-let recording = false
 let showingModal = false
 let step = 1
 
@@ -346,59 +345,71 @@ resetBtn.onclick = event => {
 let recordedChunks = []
 let recorder = null
 
-const codecs = {
-  mp4: 'codecs=h264',
-  webm: 'codecs=vp9'
-}
-
-const downloadModal = document.getElementById('download-modal')
-const downloadBtn = document.getElementById('download-btn')
+const recordModal = document.getElementById('record-modal')
+const startRecordingBtn = document.getElementById('start-recording-btn')
 const filenameInput = document.getElementById('filename-input')
-const selectFiletype = document.getElementById('select-filetype')
+const selectFiletype = document.getElementById('select-format')
 
 let filename
-let filetype
+let format
+let mimeType
+let stream
+
+const formats = [
+  'mp4',
+  'mpeg',
+  'ogg',
+  'webm'
+]
+
+for (const format of formats) {
+  if (window.MediaRecorder.isTypeSupported('video/' + format)) {
+    const option = document.createElement('option')
+    option.innerText = option.value = format
+    selectFiletype.appendChild(option)
+  }
+}
 
 recordBtn.onclick = async event => {
-  if (recording) {
+  if (recorder) {
     recorder.stop()
+    recorder = false
+    stream = null
+
     recordBtn.style.color = 'black'
 
-    showModal(downloadModal)
-
-    await new Promise(resolve => {
-      downloadBtn.onclick = resolve
-    })
-
-    hideModal(downloadModal)
-
-    filename = filenameInput.value
-    filetype = selectFiletype.value
-
-    const blob = new window.Blob(recordedChunks, { type: 'video/' + filetype })
+    const blob = new window.Blob(recordedChunks, { type: mimeType })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
 
     a.href = url
-    a.download = filename + '.' + filetype
+    a.download = filename + '.' + format
     a.click()
 
     URL.revokeObjectURL(url)
 
     recordedChunks = []
-    recording = false
 
     stop()
 
     return
   }
 
+  showModal(recordModal)
+
+  await new Promise(resolve => {
+    startRecordingBtn.onclick = resolve
+  })
+
+  hideModal(recordModal)
+
+  filename = filenameInput.value
+  format = selectFiletype.value
+
+  stream = canvas.captureStream(240)
+  mimeType = 'video/' + format
+
   recordedChunks = []
-  recording = true
-
-  const stream = canvas.captureStream(240)
-  const mimeType = 'video/' + filetype + ';' + codecs[filetype]
-
   recorder = new window.MediaRecorder(stream, { mimeType })
 
   recorder.ondataavailable = event => {
