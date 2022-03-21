@@ -18,13 +18,7 @@ const stepInput = document.getElementById('step-input')
 const startFnsBtn = document.getElementById('start-fns-btn')
 const changeFnsBtn = document.getElementById('change-fns-btn')
 
-const xcoord = document.getElementById('xcoord')
-const ycoord = document.getElementById('ycoord')
-const rvalue = document.getElementById('rvalue')
-const gvalue = document.getElementById('gvalue')
-const bvalue = document.getElementById('bvalue')
-const palette = document.getElementById('palette')
-
+const infoCanvas = document.getElementById('info-canvas')
 const sceneCanvas = document.getElementById('scene-canvas')
 const surfaceCanvas = document.getElementById('surface-canvas')
 
@@ -61,6 +55,9 @@ let step = 1
 let stream
 let surfaceCtx
 let top
+
+const infoCtx = infoCanvas.getContext('2d')
+infoCtx.font = '1em Cousine, monospace'
 
 const setCanvasDimensions = () => {
   const rect = sceneCanvas.getBoundingClientRect()
@@ -150,52 +147,84 @@ const createChangeFn = rhs => {
 }
 
 const init = () => {
-  let x = 0
-  let y = 0
+  const coords = [0, 0]
 
   for (let i = 0; i < imageData.data.length; i += 4) {
-    if (++x === sceneCanvas.width) {
-      x = 0
-      ++y
+    if (++coords[0] === sceneCanvas.width) {
+      coords[0] = 0
+      ++coords[1]
     }
 
-    imageData.data[i] = mod(rStartFn, x, y)
-    imageData.data[i + 1] = mod(gStartFn, x, y)
-    imageData.data[i + 2] = mod(bStartFn, x, y)
+    imageData.data[i] = mod(rStartFn, ...coords)
+    imageData.data[i + 1] = mod(gStartFn, ...coords)
+    imageData.data[i + 2] = mod(bStartFn, ...coords)
     imageData.data[i + 3] = 255
   }
 
   sceneCtx.putImageData(imageData, 0, 0)
 }
 
-const updateXYRGB = () => {
-  xcoord.innerText = 'x: ' + String(x).padStart(4, '0')
-  ycoord.innerText = 'y: ' + String(y).padStart(4, '0')
+const drawInfo = () => {
+  let xcoord = 'x: '
+  let ycoord = 'y: '
+  let rvalue = 'r: '
+  let gvalue = 'g: '
+  let bvalue = 'b: '
+  let rgb
 
-  const index = x * 4 + y * imageData.width * 4
-  let [r, g, b] = imageData.data.slice(index)
+  if (x || y) {
+    const index = x * 4 + y * imageData.width * 4
+    const [r, g, b] = imageData.data.slice(index)
 
-  r = String(r).padStart(3, '0')
-  g = String(g).padStart(3, '0')
-  b = String(b).padStart(3, '0')
+    xcoord += String(x).padStart(3, '0')
+    ycoord += String(y).padStart(3, '0')
+    rvalue += String(r).padStart(3, '0')
+    gvalue += String(g).padStart(3, '0')
+    bvalue += String(b).padStart(3, '0')
+    rgb = `rgb(${r}, ${g}, ${b})`
+  } else {
+    xcoord = 'x: 000'
+    ycoord = 'y: 000'
+    rvalue = 'r: 000'
+    gvalue = 'g: 000'
+    bvalue = 'b: 000'
+    rgb = 'white'
+  }
 
-  rvalue.innerText = 'r: ' + r
-  gvalue.innerText = 'g: ' + g
-  bvalue.innerText = 'b: ' + b
-  palette.style.backgroundColor = `rgb(${r}, ${g}, ${b})`
+  infoCtx.clearRect(0, 0, infoCanvas.width, infoCanvas.height)
+
+  let nextX = Math.max(
+    infoCtx.measureText(xcoord).width,
+    infoCtx.measureText(ycoord).width
+  ) + 20
+
+  infoCtx.fillStyle = 'black'
+
+  infoCtx.fillText(xcoord, 0, 20)
+  infoCtx.fillText(ycoord, 0, 40)
+  infoCtx.fillText(rvalue, nextX, 20)
+  infoCtx.fillText(gvalue, nextX, 40)
+  infoCtx.fillText(bvalue, nextX, 60)
+
+  nextX += Math.max(
+    infoCtx.measureText(rvalue).width,
+    infoCtx.measureText(gvalue).width,
+    infoCtx.measureText(bvalue).width
+  ) + 20
+
+  infoCtx.fillStyle = rgb
+  infoCtx.fillRect(nextX, 0, nextX + 20, 60)
 }
 
 const drawCircle = () => {
-  if (!x && !y) return
-
   surfaceCtx.clearRect(0, 0, surfaceCanvas.width, surfaceCanvas.height)
+
+  if (!x && !y) return
 
   surfaceCtx.beginPath()
   surfaceCtx.ellipse(x, y, 3, 3, 0, 0, 2 * Math.PI)
   surfaceCtx.closePath()
   surfaceCtx.stroke()
-
-  updateXYRGB()
 }
 
 const moveCircle = (newX, newY) => {
@@ -242,45 +271,37 @@ document.body.onkeydown = event => {
 }
 
 controlPanel.onclick = () => {
-  if (!x && !y) return
-
   x = 0
   y = 0
 
-  sceneCtx.putImageData(imageData, 0, 0)
-
-  rvalue.innerText = 'r: 000'
-  gvalue.innerText = 'g: 000'
-  bvalue.innerText = 'b: 000'
-
-  palette.style.backgroundColor = 'white'
+  window.requestAnimationFrame(drawCircle)
+  window.requestAnimationFrame(drawInfo)
 }
 
 const change = () => {
   playing && window.requestAnimationFrame(change)
 
+  const coords = [0, 0]
+
   let r, g, b
 
-  let x = 0
-  let y = 0
-
   for (let i = 0; i < imageData.data.length; i += 4) {
-    if (++x === sceneCanvas.width) {
-      x = 0
-      ++y
+    if (++coords[0] === sceneCanvas.width) {
+      coords[0] = 0
+      ++coords[1]
     }
 
     r = imageData.data[i]
     g = imageData.data[i + 1]
     b = imageData.data[i + 2]
 
-    imageData.data[i] = mod(rChangeFn, r, g, b, step, x, y)
-    imageData.data[i + 1] = mod(gChangeFn, r, g, b, step, x, y)
-    imageData.data[i + 2] = mod(bChangeFn, r, g, b, step, x, y)
+    imageData.data[i] = mod(rChangeFn, r, g, b, step, ...coords)
+    imageData.data[i + 1] = mod(gChangeFn, r, g, b, step, ...coords)
+    imageData.data[i + 2] = mod(bChangeFn, r, g, b, step, ...coords)
   }
 
   sceneCtx.putImageData(imageData, 0, 0)
-  updateXYRGB()
+  if (x || y) window.requestAnimationFrame(drawInfo)
 }
 
 init()
@@ -442,3 +463,5 @@ showModal(warningModal)
 closeWarningModalBtn.onclick = () => {
   hideModal(warningModal)
 }
+
+drawInfo()

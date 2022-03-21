@@ -94,7 +94,7 @@ body {
   width: 100%;
 }
 
-canvas {
+.canvas {
   height: 50%;
   width: 67%;
   margin-left: 2%;
@@ -105,10 +105,14 @@ canvas {
 }
 
 #scene-canvas {
+  .canvas();
+
   z-index: 1;
 }
 
 #surface-canvas {
+  .canvas();
+
   z-index: 2;
 }
 
