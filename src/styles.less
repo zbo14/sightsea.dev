@@ -1,3 +1,5 @@
+@min-device-width: 1200px;
+
 * {
   font-family: Cousine, monospace;
 }
@@ -17,6 +19,7 @@ body {
   height: fit-content;
   overflow: auto;
   background-color: white;
+  border: 1px solid black;
   padding-bottom: 2vh;
   border-radius: 0.1em;
   margin-right: 4%;
@@ -91,9 +94,22 @@ body {
   width: 100%;
 }
 
-#canvas {
-  height: 100%;
-  width: 100%;
+canvas {
+  height: 50%;
+  width: 67%;
+  margin-left: 2%;
+  margin-right: 2%;
+  max-height: 480px;
+  max-width: 640px;
+  position: absolute;
+}
+
+#scene-canvas {
+  z-index: 1;
+}
+
+#surface-canvas {
+  z-index: 2;
 }
 
 #control-panel {

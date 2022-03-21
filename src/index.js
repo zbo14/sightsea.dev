@@ -25,7 +25,8 @@ const gvalue = document.getElementById('gvalue')
 const bvalue = document.getElementById('bvalue')
 const palette = document.getElementById('palette')
 
-const canvas = document.getElementById('canvas')
+const sceneCanvas = document.getElementById('scene-canvas')
+const surfaceCanvas = document.getElementById('surface-canvas')
 
 const startFnsModal = document.getElementById('start-fns-modal')
 const changeFnsModal = document.getElementById('change-fns-modal')
@@ -46,7 +47,6 @@ const filenameInput = document.getElementById('filename-input')
 const selectFiletype = document.getElementById('select-format')
 const closeRecordModalBtn = recordModal.querySelector('.close-btn')
 
-let ctx
 let filename
 let format
 let imageData
@@ -55,22 +55,28 @@ let mimeType
 let playing = false
 let recordedChunks = []
 let recorder = null
+let sceneCtx
 let showingModal = false
 let step = 1
 let stream
+let surfaceCtx
 let top
 
 const setCanvasDimensions = () => {
-  const rect = canvas.getBoundingClientRect()
+  const rect = sceneCanvas.getBoundingClientRect()
 
   left = Math.round(rect.left)
   top = Math.round(rect.top)
 
-  canvas.width = rect.width * DPR
-  canvas.height = rect.height * DPR
+  sceneCanvas.width = rect.width * DPR
+  sceneCanvas.height = rect.height * DPR
 
-  ctx = canvas.getContext('2d')
-  imageData = ctx.createImageData(canvas.width, canvas.height)
+  surfaceCanvas.width = rect.width * DPR
+  surfaceCanvas.height = rect.height * DPR
+
+  sceneCtx = sceneCanvas.getContext('2d')
+  surfaceCtx = surfaceCanvas.getContext('2d')
+  imageData = sceneCtx.createImageData(sceneCanvas.width, sceneCanvas.height)
 }
 
 window.onresize = event => {
@@ -148,7 +154,7 @@ const init = () => {
   let y = 0
 
   for (let i = 0; i < imageData.data.length; i += 4) {
-    if (++x === canvas.width) {
+    if (++x === sceneCanvas.width) {
       x = 0
       ++y
     }
@@ -159,19 +165,10 @@ const init = () => {
     imageData.data[i + 3] = 255
   }
 
-  ctx.putImageData(imageData, 0, 0)
-
-  drawCircle()
+  sceneCtx.putImageData(imageData, 0, 0)
 }
 
-const drawCircle = () => {
-  if (!x && !y) return
-
-  ctx.beginPath()
-  ctx.ellipse(x, y, 3, 3, 0, 0, 2 * Math.PI)
-  ctx.closePath()
-  ctx.stroke()
-
+const updateXYRGB = () => {
   xcoord.innerText = 'x: ' + String(x).padStart(4, '0')
   ycoord.innerText = 'y: ' + String(y).padStart(4, '0')
 
@@ -188,23 +185,36 @@ const drawCircle = () => {
   palette.style.backgroundColor = `rgb(${r}, ${g}, ${b})`
 }
 
+const drawCircle = () => {
+  if (!x && !y) return
+
+  surfaceCtx.clearRect(0, 0, surfaceCanvas.width, surfaceCanvas.height)
+
+  surfaceCtx.beginPath()
+  surfaceCtx.ellipse(x, y, 3, 3, 0, 0, 2 * Math.PI)
+  surfaceCtx.closePath()
+  surfaceCtx.stroke()
+
+  updateXYRGB()
+}
+
 const moveCircle = (newX, newY) => {
   const inBounds = (
-    newX >= 0 && newX <= canvas.width &&
-    newY >= 0 && newY <= canvas.height
+    newX >= 0 && newX <= sceneCanvas.width &&
+    newY >= 0 && newY <= sceneCanvas.height
   )
 
   if (!inBounds) return
 
-  (x || y) && ctx.putImageData(imageData, 0, 0)
+  (x || y) && sceneCtx.putImageData(imageData, 0, 0)
 
   x = newX
   y = newY
 
-  playing || window.requestAnimationFrame(drawCircle)
+  window.requestAnimationFrame(drawCircle)
 }
 
-canvas.onmousedown = event => {
+surfaceCanvas.onmousedown = event => {
   const newX = (event.clientX - left) * DPR
   const newY = (event.clientY - top) * DPR
 
@@ -237,7 +247,7 @@ controlPanel.onclick = () => {
   x = 0
   y = 0
 
-  ctx.putImageData(imageData, 0, 0)
+  sceneCtx.putImageData(imageData, 0, 0)
 
   rvalue.innerText = 'r: 000'
   gvalue.innerText = 'g: 000'
@@ -247,7 +257,7 @@ controlPanel.onclick = () => {
 }
 
 const change = () => {
-  if (!playing) return
+  playing && window.requestAnimationFrame(change)
 
   let r, g, b
 
@@ -255,7 +265,7 @@ const change = () => {
   let y = 0
 
   for (let i = 0; i < imageData.data.length; i += 4) {
-    if (++x === canvas.width) {
+    if (++x === sceneCanvas.width) {
       x = 0
       ++y
     }
@@ -269,11 +279,8 @@ const change = () => {
     imageData.data[i + 2] = mod(bChangeFn, r, g, b, step, x, y)
   }
 
-  ctx.putImageData(imageData, 0, 0)
-
-  drawCircle()
-
-  window.requestAnimationFrame(change)
+  sceneCtx.putImageData(imageData, 0, 0)
+  updateXYRGB()
 }
 
 init()
@@ -407,7 +414,7 @@ recordBtn.onclick = async event => {
   filename = filenameInput.value
   format = selectFiletype.value
 
-  stream = canvas.captureStream(240)
+  stream = sceneCanvas.captureStream(240)
   mimeType = 'video/' + format
 
   recordedChunks = []
