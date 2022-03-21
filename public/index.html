@@ -7,7 +7,7 @@
     <link rel="icon" href="images/favicon.ico" type="image/x-icon" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne+Mono&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cousine&display=swap">
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
@@ -18,17 +18,21 @@
           <button id="reset-btn">&#8634;</button>
           <button id="record-btn">&#x23FA;</button>
           <button class="tooltip" id="start-fns-btn">
-            f(x, y)
+            f(x,y)
             <span class="tooltip-text">Start functions</span>
           </button>
           <button class="tooltip" id="change-fns-btn">
-            f(r, g, b, s, x, y)
+            f(r,g,b,s,x,y)
             <span class="tooltip-text">Change functions</span>
           </button>
         </div>
         <div class="cp-group">
           <label for="step-input">step:</label>
           <input type="number" id="step-input" min="-256" max="256" step="1" value="1">
+        </div>
+        <div class="cp-group">
+          <span id="xcoord">x: 0000</span>
+          <span id="ycoord">y: 0000</span>
         </div>
         <div class="cp-group">
           <span id="rvalue">r: 000</span>
@@ -40,8 +44,11 @@
       <canvas id="canvas"></canvas>
       <div class="modal" id="start-fns-modal">
         <button class="close-btn">x</button>
+        <!-- <div class="modal-content">
+          <p>These functions specify initial RGB values based on pixel x-y coordinates. The placeholder functions indicate the default functions.</p>
+        </div> -->
         <div class="legend">
-          <span>Variables:</span>
+          <span><b>Variables:</b></span>
           <span><b>x:</b> x coordinate of pixel</span>
           <span><b>y:</b> y coordinate of pixel</span>
         </div>
@@ -60,8 +67,11 @@
       </div>
       <div class="modal" id="change-fns-modal">
         <button class="close-btn">x</button>
+       <!--  <div class="modal-content">
+          <p>These functions define changes in RGB values based on pixel x-y coordinates, RGB values, and step value. The placeholder functions indicate the default functions.</p>
+        </div> -->
         <div class="legend">
-          <span>Variables:</span>
+          <span><b>Variables:</b></span>
           <span><b>r:</b> current r value of pixel [0-255]</span>
           <span><b>g:</b> current g value of pixel [0-255]</span>
           <span><b>b:</b> current b value of pixel [0-255]</span>
@@ -83,8 +93,9 @@
         </div>
       </div>
       <div class="modal" id="record-modal">
+        <button class="close-btn">x</button>
         <div class="modal-content">
-          <label for="filename-input">Filename</label>
+          <label for="filename-input">Name of file download</label>
           <input type="text" id="filename-input">
         </div>
         <div class="modal-content">

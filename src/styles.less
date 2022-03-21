@@ -1,3 +1,7 @@
+* {
+  font-family: Cousine, monospace;
+}
+
 body {
   overflow: hidden;
 }
@@ -15,6 +19,7 @@ body {
   background-color: white;
   padding-bottom: 2vh;
   border-radius: 0.1em;
+  margin-right: 4%;
 }
 
 .modal-content {
@@ -27,11 +32,17 @@ body {
 }
 
 .close-btn {
+  background: white;
   border: none;
+
+  &:hover {
+    cursor: pointer;
+  }
 }
 
 .cp-group {
   margin-right: 2vw;
+  margin-bottom: 1vh;
 
   & > * {
     margin-right: 1vw;
@@ -86,6 +97,7 @@ body {
 }
 
 #control-panel {
+  border: ;
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-start;

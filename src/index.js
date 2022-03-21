@@ -1,21 +1,73 @@
 'use strict'
 
+const DPR = window.devicePixelRatio
+
+const FORMATS = [
+  'mp4',
+  'mpeg',
+  'ogg',
+  'webm'
+]
+
+const controlPanel = document.getElementById('control-panel')
+
+const playBtn = document.getElementById('play-btn')
+const resetBtn = document.getElementById('reset-btn')
+const recordBtn = document.getElementById('record-btn')
+const stepInput = document.getElementById('step-input')
+const startFnsBtn = document.getElementById('start-fns-btn')
+const changeFnsBtn = document.getElementById('change-fns-btn')
+
+const xcoord = document.getElementById('xcoord')
+const ycoord = document.getElementById('ycoord')
+const rvalue = document.getElementById('rvalue')
+const gvalue = document.getElementById('gvalue')
+const bvalue = document.getElementById('bvalue')
+const palette = document.getElementById('palette')
+
 const canvas = document.getElementById('canvas')
 
+const startFnsModal = document.getElementById('start-fns-modal')
+const changeFnsModal = document.getElementById('change-fns-modal')
+const closeStartFnsModalBtn = startFnsModal.querySelector('.close-btn')
+const closeChangeFnsModalBtn = changeFnsModal.querySelector('.close-btn')
+
+const rStartFnInput = document.getElementById('rstartfn')
+const gStartFnInput = document.getElementById('gstartfn')
+const bStartFnInput = document.getElementById('bstartfn')
+
+const rChangeFnInput = document.getElementById('rchangefn')
+const gChangeFnInput = document.getElementById('gchangefn')
+const bChangeFnInput = document.getElementById('bchangefn')
+
+const recordModal = document.getElementById('record-modal')
+const startRecordingBtn = document.getElementById('start-recording-btn')
+const filenameInput = document.getElementById('filename-input')
+const selectFiletype = document.getElementById('select-format')
+const closeRecordModalBtn = recordModal.querySelector('.close-btn')
+
 let ctx
+let filename
+let format
 let imageData
 let left
+let mimeType
+let playing = false
+let recordedChunks = []
+let recorder = null
+let showingModal = false
+let step = 1
+let stream
 let top
 
 const setCanvasDimensions = () => {
-  const dpr = window.devicePixelRatio
   const rect = canvas.getBoundingClientRect()
 
   left = Math.round(rect.left)
   top = Math.round(rect.top)
 
-  canvas.width = rect.width * dpr
-  canvas.height = rect.height * dpr
+  canvas.width = rect.width * DPR
+  canvas.height = rect.height * DPR
 
   ctx = canvas.getContext('2d')
   imageData = ctx.createImageData(canvas.width, canvas.height)
@@ -38,14 +90,6 @@ const mod = (fn, ...args) => {
   return Math.round(x % 256)
 }
 
-const rStartFnInput = document.getElementById('rstartfn')
-const gStartFnInput = document.getElementById('gstartfn')
-const bStartFnInput = document.getElementById('bstartfn')
-
-const rChangeFnInput = document.getElementById('rchangefn')
-const gChangeFnInput = document.getElementById('gchangefn')
-const bChangeFnInput = document.getElementById('bchangefn')
-
 const defaultStartFn = (x, y) => x + y
 
 let rStartFn = defaultStartFn
@@ -65,9 +109,10 @@ let y = 0
 
 const makeFnSubs = rhs => {
   return rhs
-    .replace(/([0-9.]+)\s*([a-z]+)/gi, '$1*$2')
-    .replace(/(\))\s*(\()/gi, '$1*$2')
+    .replace(/(\(.*?\)|[a-z])(?=\(|[a-z]|[0-9.]+)/gi, '$1*')
+    .replace(/([0-9.]+)(?=\(|[a-z])/gi, '$1*')
     .replace(/\^/g, '**')
+    .toLowerCase()
 }
 
 const createStartFn = rhs => {
@@ -115,6 +160,8 @@ const init = () => {
   }
 
   ctx.putImageData(imageData, 0, 0)
+
+  drawCircle()
 }
 
 const drawCircle = () => {
@@ -124,27 +171,16 @@ const drawCircle = () => {
   ctx.ellipse(x, y, 3, 3, 0, 0, 2 * Math.PI)
   ctx.closePath()
   ctx.stroke()
-}
 
-const controlPanel = document.getElementById('control-panel')
-const rvalue = document.getElementById('rvalue')
-const gvalue = document.getElementById('gvalue')
-const bvalue = document.getElementById('bvalue')
-const palette = document.getElementById('palette')
-
-const updateRGB = () => {
-  if (!x && !y) return
+  xcoord.innerText = 'x: ' + String(x).padStart(4, '0')
+  ycoord.innerText = 'y: ' + String(y).padStart(4, '0')
 
   const index = x * 4 + y * imageData.width * 4
   let [r, g, b] = imageData.data.slice(index)
 
-  r = '' + r
-  g = '' + g
-  b = '' + b
-
-  r = r.padStart(3, '0')
-  g = g.padStart(3, '0')
-  b = b.padStart(3, '0')
+  r = String(r).padStart(3, '0')
+  g = String(g).padStart(3, '0')
+  b = String(b).padStart(3, '0')
 
   rvalue.innerText = 'r: ' + r
   gvalue.innerText = 'g: ' + g
@@ -152,7 +188,7 @@ const updateRGB = () => {
   palette.style.backgroundColor = `rgb(${r}, ${g}, ${b})`
 }
 
-const place = (newX, newY) => {
+const moveCircle = (newX, newY) => {
   const inBounds = (
     newX >= 0 && newX <= canvas.width &&
     newY >= 0 && newY <= canvas.height
@@ -165,30 +201,32 @@ const place = (newX, newY) => {
   x = newX
   y = newY
 
-  drawCircle()
-  updateRGB()
+  playing || window.requestAnimationFrame(drawCircle)
 }
 
-canvas.onclick = canvas.ontouchstart = event => {
-  place(event.clientX - left, event.clientY - top)
+canvas.onmousedown = event => {
+  const newX = (event.clientX - left) * DPR
+  const newY = (event.clientY - top) * DPR
+
+  moveCircle(newX, newY)
 }
 
 document.body.onkeydown = event => {
   switch (event.key) {
     case 'ArrowUp':
-      place(x, y - 1)
+      moveCircle(x, y - 1)
       break
 
     case 'ArrowDown':
-      place(x, y + 1)
+      moveCircle(x, y + 1)
       break
 
     case 'ArrowLeft':
-      place(x - 1, y)
+      moveCircle(x - 1, y)
       break
 
     case 'ArrowRight':
-      place(x + 1, y)
+      moveCircle(x + 1, y)
       break
   }
 }
@@ -207,22 +245,6 @@ controlPanel.onclick = () => {
 
   palette.style.backgroundColor = 'white'
 }
-
-const playBtn = document.getElementById('play-btn')
-const resetBtn = document.getElementById('reset-btn')
-const recordBtn = document.getElementById('record-btn')
-const stepInput = document.getElementById('step-input')
-const startFnsBtn = document.getElementById('start-fns-btn')
-const changeFnsBtn = document.getElementById('change-fns-btn')
-
-const startFnsModal = document.getElementById('start-fns-modal')
-const changeFnsModal = document.getElementById('change-fns-modal')
-const closeStartFnsModalBtn = startFnsModal.querySelector('.close-btn')
-const closeChangeFnsModalBtn = changeFnsModal.querySelector('.close-btn')
-
-let playing = false
-let showingModal = false
-let step = 1
 
 const change = () => {
   if (!playing) return
@@ -250,7 +272,6 @@ const change = () => {
   ctx.putImageData(imageData, 0, 0)
 
   drawCircle()
-  updateRGB()
 
   window.requestAnimationFrame(change)
 }
@@ -342,27 +363,7 @@ resetBtn.onclick = event => {
   init()
 }
 
-let recordedChunks = []
-let recorder = null
-
-const recordModal = document.getElementById('record-modal')
-const startRecordingBtn = document.getElementById('start-recording-btn')
-const filenameInput = document.getElementById('filename-input')
-const selectFiletype = document.getElementById('select-format')
-
-let filename
-let format
-let mimeType
-let stream
-
-const formats = [
-  'mp4',
-  'mpeg',
-  'ogg',
-  'webm'
-]
-
-for (const format of formats) {
+for (const format of FORMATS) {
   if (window.MediaRecorder.isTypeSupported('video/' + format)) {
     const option = document.createElement('option')
     option.innerText = option.value = format
@@ -420,6 +421,10 @@ recordBtn.onclick = async event => {
 
   recordBtn.style.color = 'red'
   playing || play()
+}
+
+closeRecordModalBtn.onclick = event => {
+  hideModal(recordModal)
 }
 
 const warningModal = document.getElementById('warning-modal')
