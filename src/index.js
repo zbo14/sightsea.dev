@@ -229,6 +229,7 @@ surfaceCanvas.onmousedown = event => {
   const newY = (event.clientY - top) * DPR
 
   moveCircle(newX, newY)
+  window.requestAnimationFrame(drawInfo)
 }
 
 document.body.onkeydown = event => {
