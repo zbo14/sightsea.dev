@@ -90,17 +90,15 @@ let bChangeFn = defaultBChangeFn
 let x = 0
 let y = 0
 
-const makeFnSubs = rhs => {
+const cleanRHS = rhs => {
   return rhs
-    .replace(/(\(.*?\)|[a-z])(?=\(|[a-z]|[0-9.]+)/gi, '$1*')
-    .replace(/([0-9.]+)(?=\(|[a-z])/gi, '$1*')
-    .replace(/\^/g, '**')
     .replace(/\s/g, '')
+    .replace(/\^/g, '**')
     .toLowerCase()
 }
 
 const createStartFn = rhs => {
-  rhs = makeFnSubs(rhs)
+  rhs = cleanRHS(rhs)
 
   if (/[^0-9xy*+\-/.() ]/.test(rhs)) {
     const err = new Error('Invalid start function: (x, y) => ' + rhs)
@@ -114,7 +112,7 @@ const createStartFn = rhs => {
 }
 
 const createChangeFn = rhs => {
-  rhs = makeFnSubs(rhs)
+  rhs = cleanRHS(rhs)
 
   if (/[^0-9rgbsxy*+\-/.() ]/.test(rhs)) {
     const err = new Error('Invalid change function: (r, g, b, s, x, y) => ' + rhs)
