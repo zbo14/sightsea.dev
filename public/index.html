@@ -16,7 +16,6 @@
         <div class="cp-group">
           <button id="play-btn">&#x25B6;</button>
           <button id="reset-btn">&#8634;</button>
-          <button id="record-btn">&#x23FA;</button>
         </div>
         <div class="cp-group">
           <button class="tooltip" id="start-fns-btn">
@@ -34,21 +33,12 @@
         </div>
         <div class="cp-group">
           <canvas id="info-canvas"></canvas>
-          <!-- <span id="xcoord">x: 0000</span>
-          <span id="ycoord">y: 0000</span>
-          <span id="rvalue">r: 000</span>
-          <span id="gvalue">g: 000</span>
-          <span id="bvalue">b: 000</span>
-          <div id="palette"></div> -->
         </div>
       </div>
       <canvas id="surface-canvas"></canvas>
       <canvas id="scene-canvas"></canvas>
       <div class="modal" id="start-fns-modal">
         <button class="close-btn">x</button>
-        <!-- <div class="modal-content">
-          <p>These functions specify initial RGB values based on pixel x-y coordinates. The placeholder functions indicate the default functions.</p>
-        </div> -->
         <div class="legend">
           <span><b>Variables:</b></span>
           <span><b>x:</b> x coordinate of pixel</span>
@@ -69,9 +59,6 @@
       </div>
       <div class="modal" id="change-fns-modal">
         <button class="close-btn">x</button>
-       <!--  <div class="modal-content">
-          <p>These functions define changes in RGB values based on pixel x-y coordinates, RGB values, and step value. The placeholder functions indicate the default functions.</p>
-        </div> -->
         <div class="legend">
           <span><b>Variables:</b></span>
           <span><b>r:</b> current r value of pixel [0-255]</span>
@@ -92,21 +79,6 @@
         <div class="modal-content">
           <label for="bchangefn">blue change</label>
           <input type="text" id="bchangefn" placeholder="b + s">
-        </div>
-      </div>
-      <div class="modal" id="record-modal">
-        <button class="close-btn">x</button>
-        <div class="modal-content">
-          <label for="filename-input">Name of file download</label>
-          <input type="text" id="filename-input">
-        </div>
-        <div class="modal-content">
-          <select id="select-format">
-            <option disabled selected>Select format:</option>
-          </select>
-        </div>
-        <div class="modal-content">
-          <button id="start-recording-btn">record</button>
         </div>
       </div>
       <div class="modal" id="warning-modal">

@@ -2,18 +2,10 @@
 
 const DPR = window.devicePixelRatio
 
-const FORMATS = [
-  'mp4',
-  'mpeg',
-  'ogg',
-  'webm'
-]
-
 const controlPanel = document.getElementById('control-panel')
 
 const playBtn = document.getElementById('play-btn')
 const resetBtn = document.getElementById('reset-btn')
-const recordBtn = document.getElementById('record-btn')
 const stepInput = document.getElementById('step-input')
 const startFnsBtn = document.getElementById('start-fns-btn')
 const changeFnsBtn = document.getElementById('change-fns-btn')
@@ -35,24 +27,12 @@ const rChangeFnInput = document.getElementById('rchangefn')
 const gChangeFnInput = document.getElementById('gchangefn')
 const bChangeFnInput = document.getElementById('bchangefn')
 
-const recordModal = document.getElementById('record-modal')
-const startRecordingBtn = document.getElementById('start-recording-btn')
-const filenameInput = document.getElementById('filename-input')
-const selectFiletype = document.getElementById('select-format')
-const closeRecordModalBtn = recordModal.querySelector('.close-btn')
-
-let filename
-let format
 let imageData
 let left
-let mimeType
 let playing = false
-let recordedChunks = []
-let recorder = null
 let sceneCtx
 let showingModal = false
 let step = 1
-let stream
 let surfaceCtx
 let top
 
@@ -115,6 +95,7 @@ const makeFnSubs = rhs => {
     .replace(/(\(.*?\)|[a-z])(?=\(|[a-z]|[0-9.]+)/gi, '$1*')
     .replace(/([0-9.]+)(?=\(|[a-z])/gi, '$1*')
     .replace(/\^/g, '**')
+    .replace(/\s/g, '')
     .toLowerCase()
 }
 
@@ -389,70 +370,6 @@ playBtn.onclick = event => {
 resetBtn.onclick = event => {
   event.stopPropagation()
   init()
-}
-
-for (const format of FORMATS) {
-  if (window.MediaRecorder.isTypeSupported('video/' + format)) {
-    const option = document.createElement('option')
-    option.innerText = option.value = format
-    selectFiletype.appendChild(option)
-  }
-}
-
-recordBtn.onclick = async event => {
-  if (recorder) {
-    recorder.stop()
-    recorder = false
-    stream = null
-
-    recordBtn.style.color = 'black'
-
-    const blob = new window.Blob(recordedChunks, { type: mimeType })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-
-    a.href = url
-    a.download = filename + '.' + format
-    a.click()
-
-    URL.revokeObjectURL(url)
-
-    recordedChunks = []
-
-    stop()
-
-    return
-  }
-
-  showModal(recordModal)
-
-  await new Promise(resolve => {
-    startRecordingBtn.onclick = resolve
-  })
-
-  hideModal(recordModal)
-
-  filename = filenameInput.value
-  format = selectFiletype.value
-
-  stream = sceneCanvas.captureStream(240)
-  mimeType = 'video/' + format
-
-  recordedChunks = []
-  recorder = new window.MediaRecorder(stream, { mimeType })
-
-  recorder.ondataavailable = event => {
-    recordedChunks.push(event.data)
-  }
-
-  recorder.start(1e3)
-
-  recordBtn.style.color = 'red'
-  playing || play()
-}
-
-closeRecordModalBtn.onclick = event => {
-  hideModal(recordModal)
 }
 
 const warningModal = document.getElementById('warning-modal')
