@@ -90,39 +90,14 @@ let bChangeFn = defaultBChangeFn
 let x = 0
 let y = 0
 
-const cleanRHS = rhs => {
-  return rhs
-    .replace(/\s/g, '')
-    .replace(/\^/g, '**')
-    .toLowerCase()
-}
-
 const createStartFn = rhs => {
-  rhs = cleanRHS(rhs)
-
-  if (/[^0-9xy*+\-/.() ]/.test(rhs)) {
-    const err = new Error('Invalid start function: (x, y) => ' + rhs)
-    console.error(err)
-    window.alert(err.message)
-    return
-  }
-
   // eslint-disable-next-line no-new-func
-  return new Function('x', 'y', 'return ' + rhs)
+  return new Function('x', 'y', 'return ' + rhs.replace(/\s/g, ''))
 }
 
 const createChangeFn = rhs => {
-  rhs = cleanRHS(rhs)
-
-  if (/[^0-9rgbsxy*+\-/.() ]/.test(rhs)) {
-    const err = new Error('Invalid change function: (r, g, b, s, x, y) => ' + rhs)
-    console.error(err)
-    window.alert(err.message)
-    return
-  }
-
   // eslint-disable-next-line no-new-func
-  return new Function('r', 'g', 'b', 's', 'x', 'y', 'return ' + rhs)
+  return new Function('r', 'g', 'b', 's', 'x', 'y', 'return ' + rhs.replace(/\s/g, ''))
 }
 
 const init = () => {
@@ -313,35 +288,53 @@ changeFnsBtn.onclick = event => {
 }
 
 closeStartFnsModalBtn.onclick = () => {
-  rStartFn = rStartFnInput.value
-    ? createStartFn(rStartFnInput.value)
-    : defaultStartFn
+  try {
+    rStartFn = rStartFnInput.value
+      ? createStartFn(rStartFnInput.value)
+      : defaultStartFn
 
-  gStartFn = gStartFnInput.value
-    ? createStartFn(gStartFnInput.value)
-    : defaultStartFn
+    gStartFn = gStartFnInput.value
+      ? createStartFn(gStartFnInput.value)
+      : defaultStartFn
 
-  bStartFn = bStartFnInput.value
-    ? createStartFn(bStartFnInput.value)
-    : defaultStartFn
+    bStartFn = bStartFnInput.value
+      ? createStartFn(bStartFnInput.value)
+      : defaultStartFn
 
-  hideModal(startFnsModal)
+    rStartFn(0, 0)
+    bStartFn(0, 0)
+    gStartFn(0, 0)
+
+    hideModal(startFnsModal)
+  } catch (err) {
+    console.error(err)
+    alert('Invalid start function:' + err.message)
+  }
 }
 
 closeChangeFnsModalBtn.onclick = () => {
-  rChangeFn = rChangeFnInput.value
-    ? createChangeFn(rChangeFnInput.value)
-    : defaultRChangeFn
+  try {
+    rChangeFn = rChangeFnInput.value
+      ? createChangeFn(rChangeFnInput.value)
+      : defaultRChangeFn
 
-  gChangeFn = gChangeFnInput.value
-    ? createChangeFn(gChangeFnInput.value)
-    : defaultGChangeFn
+    gChangeFn = gChangeFnInput.value
+      ? createChangeFn(gChangeFnInput.value)
+      : defaultGChangeFn
 
-  bChangeFn = bChangeFnInput.value
-    ? createChangeFn(bChangeFnInput.value)
-    : defaultBChangeFn
+    bChangeFn = bChangeFnInput.value
+      ? createChangeFn(bChangeFnInput.value)
+      : defaultBChangeFn
 
-  hideModal(changeFnsModal)
+    rChangeFn(0, 0, 0, 0, 0, 0)
+    bChangeFn(0, 0, 0, 0, 0, 0)
+    gChangeFn(0, 0, 0, 0, 0, 0)
+
+    hideModal(changeFnsModal)
+  } catch (err) {
+    console.error(err)
+    alert('Invalid change function:' + err.message)
+  }
 }
 
 const play = () => {
