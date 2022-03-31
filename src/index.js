@@ -308,7 +308,7 @@ closeStartFnsModalBtn.onclick = () => {
     hideModal(startFnsModal)
   } catch (err) {
     console.error(err)
-    alert('Invalid start function:' + err.message)
+    window.alert('Invalid start function:' + err.message)
   }
 }
 
@@ -333,7 +333,7 @@ closeChangeFnsModalBtn.onclick = () => {
     hideModal(changeFnsModal)
   } catch (err) {
     console.error(err)
-    alert('Invalid change function:' + err.message)
+    window.alert('Invalid change function:' + err.message)
   }
 }
 
