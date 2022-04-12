@@ -9,6 +9,7 @@ const resetBtn = document.getElementById('reset-btn')
 const stepInput = document.getElementById('step-input')
 const startFnsBtn = document.getElementById('start-fns-btn')
 const changeFnsBtn = document.getElementById('change-fns-btn')
+const startImageInput = document.getElementById('start-image-input')
 
 const infoCanvas = document.getElementById('info-canvas')
 const sceneCanvas = document.getElementById('scene-canvas')
@@ -28,6 +29,7 @@ const gChangeFnInput = document.getElementById('gchangefn')
 const bChangeFnInput = document.getElementById('bchangefn')
 
 let imageData
+let file
 let left
 let playing = false
 let sceneCtx
@@ -54,6 +56,11 @@ const setCanvasDimensions = () => {
   sceneCtx = sceneCanvas.getContext('2d')
   surfaceCtx = surfaceCanvas.getContext('2d')
   imageData = sceneCtx.createImageData(sceneCanvas.width, sceneCanvas.height)
+}
+
+startImageInput.oninput = () => {
+  file = startImageInput.files[0]
+  init()
 }
 
 window.onresize = event => {
@@ -100,7 +107,15 @@ const createChangeFn = rhs => {
   return new Function('r', 'g', 'b', 's', 'x', 'y', 'return ' + rhs.replace(/\s/g, ''))
 }
 
-const init = () => {
+const init = async () => {
+  if (file) {
+    const bitmap = await window.createImageBitmap(file)
+    sceneCtx.drawImage(bitmap, 0, 0)
+    imageData = sceneCtx.getImageData(0, 0, sceneCanvas.width, sceneCanvas.height)
+    sceneCtx.putImageData(imageData, 0, 0)
+    return
+  }
+
   const coords = [0, 0]
 
   for (let i = 0; i < imageData.data.length; i += 4) {
